@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тренажёр французского</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: system-ui, sans-serif;
+            background: #111;
+            color: #eee;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            padding: 16px;
+        }
+        .app { max-width: 480px; width: 100%; }
+        h1 { text-align: center; margin-bottom: 16px; }
+        select, button {
+            font-size: 16px;
+            padding: 10px 14px;
+            border-radius: 8px;
+            border: 1px solid #333;
+            background: #1a1a1a;
+            color: #eee;
+            width: 100%;
+            margin-bottom: 12px;
+        }
+        button {
+            background: #2563eb;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        .exercise {
+            background: #1a1a1a;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 12px;
+        }
+        .phrase {
+            font-size: 18px;
+            margin-bottom: 16px;
+            line-height: 2.2;
+        }
+        .gap-input {
+            border: 2px solid #444;
+            width: 100px;
+            display: inline;
+            margin: 0 4px;
+            text-align: center;
+            padding: 6px 8px;
+            font-size: 16px;
+            border-radius: 6px;
+            background: #1a1a1a;
+            color: #eee;
+        }
+        .correct { border-color: #22c55e !important; background: #052e16; }
+        .wrong { border-color: #ef4444 !important; background: #2e0505; }
+        .result {
+            margin-top: 12px;
+            padding: 12px;
+            border-radius: 8px;
+            line-height: 1.6;
+        }
+        .result-correct { background: #052e16; }
+        .result-wrong { background: #2e0505; }
+        .score {
+            display: flex;
+            gap: 16px;
+            justify-content: center;
+            margin: 12px 0;
+            font-size: 14px;
+        }
+        .score .good { color: #22c55e; }
+        .score .bad { color: #ef4444; }
+        .hint {
+            font-size: 13px;
+            color: #fbbf24;
+            margin-top: 6px;
+        }
+        .retry-badge {
+            background: #7c3aed;
+            color: white;
+            font-size: 12px;
+            padding: 2px 8px;
+            border-radius: 4px;
+            margin-bottom: 8px;
+            display: inline-block;
+        }
+        .loading {
+            opacity: 0.5;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+<div class="app">
+    <h1>🇫🇷 Тренажёр</h1>
+
+    <select id="topic">
+        <option value="mixed">Вперемешку</option>
+        <option value="prepositions">Предлоги</option>
+        <option value="articles">Артикли</option>
+    </select>
+
+    <div id="exercise" class="exercise">
+        <div id="retryBadge" class="retry-badge" style="display:none;">🔄 Повтор</div>
+        <div id="phrase" class="phrase">Загрузка...</div>
+        <button id="checkBtn">Проверить</button>
+        <div id="result" class="result" style="display:none;"></div>
+        <button id="nextBtn" style="display:none;">Далее →</button>
+    </div>
+
+    <div class="score">
+        Верно: <span class="good" id="correctCount">0</span>
+        Ошибок: <span class="bad" id="wrongCount">0</span>
+    </div>
+</div>
+
+<script>
+const API_KEY = 'AQ.Ab8RN6KEgEzZDxnRf3AJkSV3GToj5rSdztgmH_nQPNQwXxpOUw';
+
+let exercise = null;
+let correctCount = 0;
+let wrongCount = 0;
+let errorQueue = JSON.parse(localStorage.getItem('errorQueue') || '[]');
+let exerciseCount = 0;
+
+async function callAI(topic, retryPhrase) {
+    const prompt = `Ты — генератор упражнений по французским предлогам и артиклям.
+Сгенерируй ОДНО предложение с пропусками. Тема: ${topic}. Пропусков от 1 до 4.
+${retryPhrase ? `Используй это предложение: "${retryPhrase}"` : 'Придумай новое.'}
+Возвращай ТОЛЬКО чистый JSON, без текста до или после, без markdown:
+{"phraseWithGaps":"...","gaps":[{"correctAnswer":"...","type":"preposition или article","explanation":"краткое правило","genderHint":"правило рода и мнемоника для article"}],"fullPhrase":"..."}
+Примеры стиля:
+Предлоги: Je voudrais une tarte ___ pommes. Musée national ___ porcelaine. Cette maison ___ XIXᵉ siècle se trouve ___ pied de la montagne.
+Артикли: ___ ordinateur est sur ___ table. C'est ___ moto de Gérard. Elle a ___ yeux bleus et ___ cheveux blonds.`;
+
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 20000);
+
+    try {
+        const res = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-goog-api-key': API_KEY
+            },
+            body: JSON.stringify({
+                contents: [{ parts: [{ text: prompt }] }],
+                generationConfig: { temperature: 0.9 }
+            }),
+            signal: controller.signal
+        });
+
+        clearTimeout(timeout);
+
+        if (!res.ok) {
+            const errText = await res.text();
+            throw new Error(`API error ${res.status}: ${errText}`);
+        }
+
+        const data = await res.json();
+        const content = data.candidates[0].content.parts[0].text;
+        const clean = content.replace(/```json|```/g, '').trim();
+        return JSON.parse(clean);
+    } catch (e) {
+        clearTimeout(timeout);
+        throw e;
+    }
+}
+
+function renderExercise() {
+    document.getElementById('retryBadge').style.display = exercise.isRetry ? 'inline-block' : 'none';
+    const phraseDiv = document.getElementById('phrase');
+    const resultDiv = document.getElementById('result');
+    const checkBtn = document.getElementById('checkBtn');
+    const nextBtn = document.getElementById('nextBtn');
+
+    resultDiv.style.display = 'none';
+    nextBtn.style.display = 'none';
+    checkBtn.style.display = 'block';
+
+    let html = '';
+    const parts = exercise.phraseWithGaps.split('___');
+    parts.forEach((part, i) => {
+        html += part;
+        if (i < parts.length - 1) {
+            html += `<input class="gap-input" id="gap${i}" type="text" placeholder="?" autocomplete="off">`;
+        }
+    });
+    phraseDiv.innerHTML = html;
+}
+
+async function loadExercise(retryPhrase) {
+    const phraseDiv = document.getElementById('phrase');
+    const checkBtn = document.getElementById('checkBtn');
+    const nextBtn = document.getElementById('nextBtn');
+    const resultDiv = document.getElementById('result');
+
+    phraseDiv.textContent = 'Загрузка...';
+    checkBtn.style.display = 'none';
+    nextBtn.style.display = 'none';
+    resultDiv.style.display = 'none';
+
+    try {
+        const topic = document.getElementById('topic').value;
+        exercise = await callAI(topic, retryPhrase || null);
+        exercise.isRetry = !!retryPhrase;
+        exercise.retryPhrase = retryPhrase;
+        renderExercise();
+    } catch (e) {
+        console.error(e);
+        phraseDiv.textContent = 'Ошибка загрузки. Нажми Далее для повтора.';
+        checkBtn.style.display = 'none';
+        nextBtn.style.display = 'block';
+    }
+}
+
+document.getElementById('checkBtn').addEventListener('click', () => {
+    if (!exercise) return;
+    const resultDiv = document.getElementById('result');
+    const gaps = exercise.gaps;
+    let allCorrect = true;
+    let html = '';
+
+    gaps.forEach((gap, i) => {
+        const input = document.getElementById(`gap${i}`);
+        if (!input) return;
+        const userAnswer = input.value.trim();
+        const isCorrect = userAnswer.toLowerCase() === gap.correctAnswer.toLowerCase();
+        if (isCorrect) {
+            input.classList.add('correct');
+        } else {
+            input.classList.add('wrong');
+            allCorrect = false;
+        }
+    });
+
+    if (allCorrect) {
+        correctCount++;
+        html = `<div class="result result-correct">✅ Всё верно!<br><strong>${exercise.fullPhrase}</strong></div>`;
+        if (exercise.isRetry) {
+            errorQueue = errorQueue.filter(p => p !== exercise.retryPhrase);
+        }
+    } else {
+        wrongCount++;
+        html = `<div class="result result-wrong">❌ Есть ошибки<br>Правильно: <strong>${exercise.fullPhrase}</strong></div>`;
+        gaps.forEach((gap, i) => {
+            const input = document.getElementById(`gap${i}`);
+            if (input && input.classList.contains('wrong')) {
+                html += `<div class="hint">📌 "${gap.correctAnswer}" — ${gap.type === 'article' ? gap.genderHint : gap.explanation}</div>`;
+            }
+        });
+        if (!exercise.isRetry && !errorQueue.includes(exercise.phraseWithGaps)) {
+            errorQueue.push(exercise.phraseWithGaps);
+        }
+    }
+
+    localStorage.setItem('errorQueue', JSON.stringify(errorQueue));
+    document.getElementById('correctCount').textContent = correctCount;
+    document.getElementById('wrongCount').textContent = wrongCount;
+    resultDiv.innerHTML = html;
+    resultDiv.style.display = 'block';
+    document.getElementById('checkBtn').style.display = 'none';
+    document.getElementById('nextBtn').style.display = 'block';
+    document.querySelectorAll('.gap-input').forEach(inp => inp.disabled = true);
+});
+
+document.getElementById('nextBtn').addEventListener('click', () => {
+    exerciseCount++;
+    if (exerciseCount % 10 === 0 && errorQueue.length > 0) {
+        const retry = errorQueue[0];
+        loadExercise(retry);
+    } else {
+        loadExercise();
+    }
+});
+
+document.getElementById('topic').addEventListener('change', () => loadExercise());
+
+loadExercise();
+</script>
+</body>
+</html>
