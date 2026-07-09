@@ -1,287 +1,537 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Тренажёр французского</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>🇫🇷 Тренажёр</title>
     <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; }
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
         body {
-            font-family: system-ui, sans-serif;
-            background: #111;
-            color: #eee;
+            font-family: -apple-system, system-ui, 'Segoe UI', Roboto, sans-serif;
+            background: #f7f9fc;
             min-height: 100vh;
             display: flex;
             justify-content: center;
+            align-items: center;
             padding: 16px;
+            margin: 0;
         }
-        .app { max-width: 480px; width: 100%; }
-        h1 { text-align: center; margin-bottom: 16px; }
-        select, button {
-            font-size: 16px;
-            padding: 10px 14px;
-            border-radius: 8px;
-            border: 1px solid #333;
-            background: #1a1a1a;
-            color: #eee;
+        .container {
+            max-width: 500px;
             width: 100%;
-            margin-bottom: 12px;
+            background: white;
+            border-radius: 32px;
+            padding: 24px 20px 32px;
+            box-shadow: 0 12px 40px rgba(0,0,0,0.08);
+            transition: 0.2s;
         }
-        button {
-            background: #2563eb;
-            border: none;
-            cursor: pointer;
-            font-weight: bold;
-        }
-        .exercise {
-            background: #1a1a1a;
-            padding: 20px;
-            border-radius: 12px;
-            margin-bottom: 12px;
-        }
-        .phrase {
-            font-size: 18px;
-            margin-bottom: 16px;
-            line-height: 2.2;
-        }
-        .gap-input {
-            border: 2px solid #444;
-            width: 100px;
-            display: inline;
-            margin: 0 4px;
-            text-align: center;
-            padding: 6px 8px;
-            font-size: 16px;
-            border-radius: 6px;
-            background: #1a1a1a;
-            color: #eee;
-        }
-        .correct { border-color: #22c55e !important; background: #052e16; }
-        .wrong { border-color: #ef4444 !important; background: #2e0505; }
-        .result {
-            margin-top: 12px;
-            padding: 12px;
-            border-radius: 8px;
-            line-height: 1.6;
-        }
-        .result-correct { background: #052e16; }
-        .result-wrong { background: #2e0505; }
-        .score {
+        h1 {
+            font-size: 24px;
+            font-weight: 600;
+            color: #1e293b;
             display: flex;
-            gap: 16px;
-            justify-content: center;
-            margin: 12px 0;
-            font-size: 14px;
-        }
-        .score .good { color: #22c55e; }
-        .score .bad { color: #ef4444; }
-        .hint {
-            font-size: 13px;
-            color: #fbbf24;
-            margin-top: 6px;
-        }
-        .retry-badge {
-            background: #7c3aed;
-            color: white;
-            font-size: 12px;
-            padding: 2px 8px;
-            border-radius: 4px;
+            align-items: center;
+            gap: 10px;
             margin-bottom: 8px;
-            display: inline-block;
         }
-        .loading {
+        .subhead {
+            color: #64748b;
+            font-size: 14px;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #e9edf2;
+            padding-bottom: 16px;
+        }
+        .mode-switch {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+        }
+        .mode-btn {
+            flex: 1;
+            min-width: 80px;
+            padding: 10px 0;
+            border: 1px solid #dce0e6;
+            background: white;
+            border-radius: 40px;
+            font-weight: 500;
+            font-size: 15px;
+            color: #334155;
+            cursor: pointer;
+            transition: 0.15s;
+            text-align: center;
+        }
+        .mode-btn.active {
+            background: #1e293b;
+            border-color: #1e293b;
+            color: white;
+        }
+        .mode-btn:active { transform: scale(0.96); }
+        .sentence-card {
+            background: #f1f5f9;
+            border-radius: 24px;
+            padding: 28px 20px;
+            margin-bottom: 20px;
+            min-height: 120px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            line-height: 1.6;
+            color: #0f172a;
+            text-align: center;
+            word-break: break-word;
+        }
+        .sentence-card .blank {
+            display: inline-block;
+            min-width: 80px;
+            border-bottom: 3px dashed #3b82f6;
+            margin: 0 4px;
+            color: #1e293b;
+            font-weight: 600;
+        }
+        .input-area {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+        .input-area input {
+            flex: 1;
+            padding: 14px 18px;
+            border: 1px solid #dce0e6;
+            border-radius: 60px;
+            font-size: 18px;
+            outline: none;
+            background: white;
+            transition: 0.15s;
+        }
+        .input-area input:focus {
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59,130,246,0.15);
+        }
+        .input-area button {
+            padding: 14px 24px;
+            background: #1e293b;
+            color: white;
+            border: none;
+            border-radius: 60px;
+            font-weight: 600;
+            font-size: 16px;
+            cursor: pointer;
+            transition: 0.15s;
+            white-space: nowrap;
+        }
+        .input-area button:active { transform: scale(0.95); }
+        .input-area button:disabled {
             opacity: 0.5;
             pointer-events: none;
+        }
+        .feedback {
+            min-height: 48px;
+            padding: 12px 16px;
+            border-radius: 16px;
+            margin-bottom: 16px;
+            font-size: 15px;
+            line-height: 1.5;
+            background: #f8fafc;
+            color: #0f172a;
+            border-left: 4px solid #94a3b8;
+        }
+        .feedback.correct {
+            border-left-color: #22c55e;
+            background: #f0fdf4;
+        }
+        .feedback.wrong {
+            border-left-color: #ef4444;
+            background: #fef2f2;
+        }
+        .stats {
+            display: flex;
+            justify-content: space-between;
+            font-size: 15px;
+            color: #475569;
+            padding: 12px 4px 0;
+            border-top: 1px solid #e9edf2;
+            margin-top: 8px;
+        }
+        .stats span { font-weight: 600; }
+        .stats .correct-count { color: #22c55e; }
+        .stats .wrong-count { color: #ef4444; }
+        .next-btn {
+            width: 100%;
+            padding: 16px;
+            background: #e9edf2;
+            border: none;
+            border-radius: 60px;
+            font-weight: 600;
+            font-size: 17px;
+            color: #1e293b;
+            margin-top: 12px;
+            cursor: pointer;
+            transition: 0.15s;
+        }
+        .next-btn:active { transform: scale(0.97); }
+        .next-btn:disabled {
+            opacity: 0.4;
+            pointer-events: none;
+        }
+        .repeat-toggle {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 16px 0 8px;
+            font-size: 14px;
+            color: #475569;
+        }
+        .repeat-toggle input {
+            width: 20px;
+            height: 20px;
+            accent-color: #1e293b;
+            cursor: pointer;
+        }
+        .error-msg {
+            color: #ef4444;
+            font-size: 14px;
+            text-align: center;
+            margin-top: 8px;
+        }
+        @media (max-width: 480px) {
+            .container { padding: 16px; }
+            .sentence-card { font-size: 19px; padding: 20px 12px; }
+            .input-area input { font-size: 16px; padding: 12px 14px; }
+            .input-area button { padding: 12px 18px; font-size: 15px; }
         }
     </style>
 </head>
 <body>
-<div class="app">
+
+<div class="container">
     <h1>🇫🇷 Тренажёр</h1>
+    <div class="subhead">Артикли и предлоги · вперемешку</div>
 
-    <select id="topic">
-        <option value="mixed">Вперемешку</option>
-        <option value="prepositions">Предлоги</option>
-        <option value="articles">Артикли</option>
-    </select>
+    <div class="mode-switch">
+        <button class="mode-btn active" data-mode="all">Вперемешку</button>
+        <button class="mode-btn" data-mode="prep">Предлоги</button>
+        <button class="mode-btn" data-mode="art">Артикли</button>
+    </div>
 
-    <div id="exercise" class="exercise">
-        <div id="retryBadge" class="retry-badge" style="display:none;">🔄 Повтор</div>
-        <div id="phrase" class="phrase">Загрузка...</div>
+    <div class="sentence-card" id="sentenceDisplay">
+        <span>Нажмите «Далее»</span>
+    </div>
+
+    <div class="input-area">
+        <input type="text" id="userInput" placeholder="Введите ответ..." autocomplete="off" />
         <button id="checkBtn">Проверить</button>
-        <div id="result" class="result" style="display:none;"></div>
-        <button id="nextBtn" style="display:none;">Далее →</button>
     </div>
 
-    <div class="score">
-        Верно: <span class="good" id="correctCount">0</span>
-        Ошибок: <span class="bad" id="wrongCount">0</span>
+    <div class="feedback" id="feedback">Введите ответ и нажмите «Проверить»</div>
+
+    <div class="stats">
+        <span>✅ Верно: <span class="correct-count" id="correctCount">0</span></span>
+        <span>❌ Ошибок: <span class="wrong-count" id="wrongCount">0</span></span>
+        <span>📌 Очередь: <span id="queueCount">0</span></span>
     </div>
+
+    <div class="repeat-toggle">
+        <input type="checkbox" id="repeatMode" />
+        <label for="repeatMode">🔄 Повтор ошибочных (каждые 10)</label>
+    </div>
+
+    <button class="next-btn" id="nextBtn">Далее →</button>
+    <div id="errorMsg" class="error-msg"></div>
 </div>
 
 <script>
-const API_KEY = 'AQ.Ab8RN6KEgEzZDxnRf3AJkSV3GToj5rSdztgmH_nQPNQwXxpOUw';
+    (function() {
+        // ---------- API КОНФИГ ----------
+        const GEMINI_KEY = 'AQ.Ab8RN6KEgEzZDxnRf3AJkSV3GToj5rSdztgmH_nQPNQwXxpOUw';
+        const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_KEY}`;
+        const PROXY_URL = `https://corsproxy.io/?url=${encodeURIComponent(GEMINI_URL)}`;
 
-let exercise = null;
-let correctCount = 0;
-let wrongCount = 0;
-let errorQueue = JSON.parse(localStorage.getItem('errorQueue') || '[]');
-let exerciseCount = 0;
+        // ---------- СОСТОЯНИЕ ----------
+        let sentences = [];
+        let currentIndex = 0;
+        let correctCount = 0;
+        let wrongCount = 0;
+        let wrongList = [];
+        let currentMode = 'all'; // 'all' | 'prep' | 'art'
+        let repeatMode = false;
+        let isChecking = false;
+        let isGenerating = false;
+        let currentSentence = null; // { text, answer, type, explanation? }
 
-async function callAI(topic, retryPhrase) {
-    const prompt = `Ты — генератор упражнений по французским предлогам и артиклям.
-Сгенерируй ОДНО предложение с пропусками. Тема: ${topic}. Пропусков от 1 до 4.
-${retryPhrase ? `Используй это предложение: "${retryPhrase}"` : 'Придумай новое.'}
-Возвращай ТОЛЬКО чистый JSON, без текста до или после, без markdown:
-{"phraseWithGaps":"...","gaps":[{"correctAnswer":"...","type":"preposition или article","explanation":"краткое правило","genderHint":"правило рода и мнемоника для article"}],"fullPhrase":"..."}
-Примеры стиля:
-Предлоги: Je voudrais une tarte ___ pommes. Musée national ___ porcelaine. Cette maison ___ XIXᵉ siècle se trouve ___ pied de la montagne.
-Артикли: ___ ordinateur est sur ___ table. C'est ___ moto de Gérard. Elle a ___ yeux bleus et ___ cheveux blonds.`;
+        // DOM-элементы
+        const sentenceDisplay = document.getElementById('sentenceDisplay');
+        const userInput = document.getElementById('userInput');
+        const checkBtn = document.getElementById('checkBtn');
+        const feedback = document.getElementById('feedback');
+        const correctSpan = document.getElementById('correctCount');
+        const wrongSpan = document.getElementById('wrongCount');
+        const queueSpan = document.getElementById('queueCount');
+        const nextBtn = document.getElementById('nextBtn');
+        const errorMsg = document.getElementById('errorMsg');
+        const repeatCheckbox = document.getElementById('repeatMode');
+        const modeBtns = document.querySelectorAll('.mode-btn');
 
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 20000);
-
-    try {
-        const res = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-goog-api-key': API_KEY
-            },
-            body: JSON.stringify({
-                contents: [{ parts: [{ text: prompt }] }],
-                generationConfig: { temperature: 0.9 }
-            }),
-            signal: controller.signal
-        });
-
-        clearTimeout(timeout);
-
-        if (!res.ok) {
-            const errText = await res.text();
-            throw new Error(`API error ${res.status}: ${errText}`);
+        // ---------- ВСПОМОГАТЕЛЬНЫЕ ----------
+        function updateStats() {
+            correctSpan.textContent = correctCount;
+            wrongSpan.textContent = wrongCount;
+            queueSpan.textContent = wrongList.length;
         }
 
-        const data = await res.json();
-        const content = data.candidates[0].content.parts[0].text;
-        const clean = content.replace(/```json|```/g, '').trim();
-        return JSON.parse(clean);
-    } catch (e) {
-        clearTimeout(timeout);
-        throw e;
-    }
-}
-
-function renderExercise() {
-    document.getElementById('retryBadge').style.display = exercise.isRetry ? 'inline-block' : 'none';
-    const phraseDiv = document.getElementById('phrase');
-    const resultDiv = document.getElementById('result');
-    const checkBtn = document.getElementById('checkBtn');
-    const nextBtn = document.getElementById('nextBtn');
-
-    resultDiv.style.display = 'none';
-    nextBtn.style.display = 'none';
-    checkBtn.style.display = 'block';
-
-    let html = '';
-    const parts = exercise.phraseWithGaps.split('___');
-    parts.forEach((part, i) => {
-        html += part;
-        if (i < parts.length - 1) {
-            html += `<input class="gap-input" id="gap${i}" type="text" placeholder="?" autocomplete="off">`;
+        function setError(msg) {
+            errorMsg.textContent = msg;
+            if (msg) console.warn(msg);
         }
-    });
-    phraseDiv.innerHTML = html;
-}
 
-async function loadExercise(retryPhrase) {
-    const phraseDiv = document.getElementById('phrase');
-    const checkBtn = document.getElementById('checkBtn');
-    const nextBtn = document.getElementById('nextBtn');
-    const resultDiv = document.getElementById('result');
-
-    phraseDiv.textContent = 'Загрузка...';
-    checkBtn.style.display = 'none';
-    nextBtn.style.display = 'none';
-    resultDiv.style.display = 'none';
-
-    try {
-        const topic = document.getElementById('topic').value;
-        exercise = await callAI(topic, retryPhrase || null);
-        exercise.isRetry = !!retryPhrase;
-        exercise.retryPhrase = retryPhrase;
-        renderExercise();
-    } catch (e) {
-        console.error(e);
-        phraseDiv.textContent = 'Ошибка загрузки. Нажми Далее для повтора.';
-        checkBtn.style.display = 'none';
-        nextBtn.style.display = 'block';
-    }
-}
-
-document.getElementById('checkBtn').addEventListener('click', () => {
-    if (!exercise) return;
-    const resultDiv = document.getElementById('result');
-    const gaps = exercise.gaps;
-    let allCorrect = true;
-    let html = '';
-
-    gaps.forEach((gap, i) => {
-        const input = document.getElementById(`gap${i}`);
-        if (!input) return;
-        const userAnswer = input.value.trim();
-        const isCorrect = userAnswer.toLowerCase() === gap.correctAnswer.toLowerCase();
-        if (isCorrect) {
-            input.classList.add('correct');
-        } else {
-            input.classList.add('wrong');
-            allCorrect = false;
+        function setFeedback(text, type = '') {
+            feedback.textContent = text;
+            feedback.className = 'feedback' + (type ? ' ' + type : '');
         }
-    });
 
-    if (allCorrect) {
-        correctCount++;
-        html = `<div class="result result-correct">✅ Всё верно!<br><strong>${exercise.fullPhrase}</strong></div>`;
-        if (exercise.isRetry) {
-            errorQueue = errorQueue.filter(p => p !== exercise.retryPhrase);
+        function setButtonsEnabled(enabled) {
+            checkBtn.disabled = !enabled;
+            nextBtn.disabled = !enabled;
         }
-    } else {
-        wrongCount++;
-        html = `<div class="result result-wrong">❌ Есть ошибки<br>Правильно: <strong>${exercise.fullPhrase}</strong></div>`;
-        gaps.forEach((gap, i) => {
-            const input = document.getElementById(`gap${i}`);
-            if (input && input.classList.contains('wrong')) {
-                html += `<div class="hint">📌 "${gap.correctAnswer}" — ${gap.type === 'article' ? gap.genderHint : gap.explanation}</div>`;
+
+        function renderSentence(sentence) {
+            if (!sentence) {
+                sentenceDisplay.innerHTML = '<span>Нет предложений. Нажмите «Далее»</span>';
+                return;
+            }
+            // Показываем текст с подчёркиванием вместо пропуска
+            const parts = sentence.text.split('___');
+            if (parts.length === 2) {
+                sentenceDisplay.innerHTML = `
+                    ${parts[0]}<span class="blank">______</span>${parts[1]}
+                `;
+            } else {
+                sentenceDisplay.innerHTML = sentence.text;
+            }
+            userInput.value = '';
+            userInput.focus();
+            setFeedback('Введите ответ и нажмите «Проверить»');
+        }
+
+        // ---------- ГЕНЕРАЦИЯ ПРЕДЛОЖЕНИЙ (Gemini) ----------
+        async function generateSentences(mode, count = 10) {
+            if (isGenerating) return;
+            isGenerating = true;
+            setButtonsEnabled(false);
+            setError('');
+            setFeedback('⏳ Генерация предложений...', '');
+
+            const modeMap = {
+                'all': 'артикли (le/la/les/un/une/des) и предлоги (à/au/aux/du/de/des/en/par/pour/sans/sous/sur/avec/chez/entre)',
+                'prep': 'только предлоги (à/au/aux/du/de/des/en/par/pour/sans/sous/sur/avec/chez/entre)',
+                'art': 'только артикли (le/la/les/un/une/des)'
+            };
+            const modeDesc = modeMap[mode] || modeMap['all'];
+
+            const prompt = `
+                Ты — генератор упражнений для изучения французского языка.
+                Сгенерируй ${count} предложений на французском языке с пропуском (___).
+                Тема: ${modeDesc}.
+                Каждое предложение должно иметь ровно один пропуск.
+                Для каждого предложения укажи правильный ответ (то, что должно стоять на месте пропуска) и тип (артикль или предлог).
+                Верни ответ строго в формате JSON-массива объектов с полями:
+                {
+                    "text": "предложение с ___ вместо пропуска",
+                    "answer": "правильный ответ",
+                    "type": "article" или "preposition"
+                }
+                Только JSON, без пояснений.
+                Пример: [{"text":"Je vais ___ école.","answer":"à l'","type":"preposition"}]
+            `;
+
+            try {
+                const response = await fetch(PROXY_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        contents: [{
+                            parts: [{ text: prompt }]
+                        }]
+                    })
+                });
+
+                if (!response.ok) {
+                    const errText = await response.text();
+                    throw new Error(`API ошибка ${response.status}: ${errText}`);
+                }
+
+                const data = await response.json();
+                const rawText = data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+
+                // Извлекаем JSON из ответа
+                const jsonMatch = rawText.match(/\[[\s\S]*\]/);
+                if (!jsonMatch) throw new Error('Не удалось найти JSON в ответе');
+                const parsed = JSON.parse(jsonMatch[0]);
+                if (!Array.isArray(parsed) || parsed.length === 0) throw new Error('Пустой массив');
+
+                // Сохраняем
+                sentences = parsed.map(s => ({
+                    text: s.text || '',
+                    answer: (s.answer || '').trim(),
+                    type: s.type === 'article' ? 'article' : 'preposition',
+                    explanation: s.explanation || ''
+                }));
+
+                if (sentences.length === 0) throw new Error('Нет сгенерированных предложений');
+
+                currentIndex = 0;
+                wrongList = [];
+                correctCount = 0;
+                wrongCount = 0;
+                updateStats();
+                currentSentence = sentences[0];
+                renderSentence(currentSentence);
+                setFeedback(`✅ Загружено ${sentences.length} предложений. Введите ответ.`, 'correct');
+                setError('');
+            } catch (err) {
+                setError('Ошибка генерации: ' + err.message);
+                setFeedback('⚠️ Не удалось загрузить упражнения. Нажмите «Далее» для повтора.', 'wrong');
+                // Если нет предложений, показываем заглушку
+                if (sentences.length === 0) {
+                    sentences = [{
+                        text: 'Je vais ___ école.',
+                        answer: "à l'",
+                        type: 'preposition'
+                    }];
+                    currentIndex = 0;
+                    currentSentence = sentences[0];
+                    renderSentence(currentSentence);
+                }
+            } finally {
+                isGenerating = false;
+                setButtonsEnabled(true);
+            }
+        }
+
+        // ---------- ПРОВЕРКА ОТВЕТА ----------
+        function checkAnswer() {
+            if (isChecking || !currentSentence) return;
+            if (!userInput.value.trim()) {
+                setFeedback('✏️ Введите ваш вариант ответа.', '');
+                return;
+            }
+
+            isChecking = true;
+            const userAnswer = userInput.value.trim();
+            const correctAnswer = currentSentence.answer;
+
+            // Нормализация для сравнения (убираем пробелы, приводим к нижнему регистру)
+            const normalize = (s) => s.replace(/\s+/g, ' ').trim().toLowerCase();
+            const isCorrect = normalize(userAnswer) === normalize(correctAnswer);
+
+            if (isCorrect) {
+                correctCount++;
+                setFeedback(`✅ Верно! Правильный ответ: «${correctAnswer}»`, 'correct');
+            } else {
+                wrongCount++;
+                // Добавляем в список ошибочных (если повтор включён)
+                if (repeatMode) {
+                    // Проверяем, нет ли уже такого в списке (чтобы не дублировать)
+                    const exists = wrongList.some(s => s.text === currentSentence.text);
+                    if (!exists) {
+                        wrongList.push({ ...currentSentence });
+                    }
+                }
+                const explanation = currentSentence.explanation ? ` (${currentSentence.explanation})` : '';
+                setFeedback(`❌ Неверно. Правильно: «${correctAnswer}»${explanation}`, 'wrong');
+            }
+
+            updateStats();
+            userInput.disabled = true;
+            checkBtn.disabled = true;
+            isChecking = false;
+        }
+
+        // ---------- СЛЕДУЮЩЕЕ ПРЕДЛОЖЕНИЕ ----------
+        function nextSentence() {
+            if (isGenerating) return;
+
+            // Если есть повторяемые ошибки и включён режим
+            if (repeatMode && wrongList.length > 0) {
+                // Берём первое из списка ошибок
+                const next = wrongList.shift();
+                // Вставляем его в массив на позицию currentIndex
+                sentences.splice(currentIndex + 1, 0, next);
+                // Если currentIndex указывает на последний элемент, двигаем его
+                if (currentIndex >= sentences.length - 1) {
+                    // ничего не делаем, просто перейдём к следующему
+                }
+            }
+
+            // Переход к следующему индексу
+            if (currentIndex < sentences.length - 1) {
+                currentIndex++;
+            } else {
+                // Если дошли до конца — запрашиваем новую порцию
+                setFeedback('📚 Загружаем новую порцию...', '');
+                generateSentences(currentMode, 10);
+                return;
+            }
+
+            currentSentence = sentences[currentIndex];
+            renderSentence(currentSentence);
+            userInput.disabled = false;
+            checkBtn.disabled = false;
+            userInput.focus();
+            setFeedback('Введите ответ и нажмите «Проверить»');
+            updateStats();
+        }
+
+        // ---------- ОБРАБОТЧИКИ ----------
+        checkBtn.addEventListener('click', checkAnswer);
+
+        nextBtn.addEventListener('click', nextSentence);
+
+        userInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                if (!checkBtn.disabled) {
+                    checkAnswer();
+                } else if (!nextBtn.disabled) {
+                    nextSentence();
+                }
             }
         });
-        if (!exercise.isRetry && !errorQueue.includes(exercise.phraseWithGaps)) {
-            errorQueue.push(exercise.phraseWithGaps);
+
+        // Переключение режима
+        modeBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                modeBtns.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                currentMode = btn.dataset.mode;
+                // Сбрасываем и генерируем заново
+                generateSentences(currentMode, 10);
+            });
+        });
+
+        // Повтор ошибок
+        repeatCheckbox.addEventListener('change', () => {
+            repeatMode = repeatCheckbox.checked;
+            if (!repeatMode) {
+                // Очищаем список ошибок
+                wrongList = [];
+                updateStats();
+            }
+        });
+
+        // ---------- ИНИЦИАЛИЗАЦИЯ ----------
+        function init() {
+            // Загружаем начальные предложения
+            generateSentences('all', 10);
         }
-    }
 
-    localStorage.setItem('errorQueue', JSON.stringify(errorQueue));
-    document.getElementById('correctCount').textContent = correctCount;
-    document.getElementById('wrongCount').textContent = wrongCount;
-    resultDiv.innerHTML = html;
-    resultDiv.style.display = 'block';
-    document.getElementById('checkBtn').style.display = 'none';
-    document.getElementById('nextBtn').style.display = 'block';
-    document.querySelectorAll('.gap-input').forEach(inp => inp.disabled = true);
-});
-
-document.getElementById('nextBtn').addEventListener('click', () => {
-    exerciseCount++;
-    if (exerciseCount % 10 === 0 && errorQueue.length > 0) {
-        const retry = errorQueue[0];
-        loadExercise(retry);
-    } else {
-        loadExercise();
-    }
-});
-
-document.getElementById('topic').addEventListener('change', () => loadExercise());
-
-loadExercise();
+        init();
+    })();
 </script>
 </body>
 </html>
